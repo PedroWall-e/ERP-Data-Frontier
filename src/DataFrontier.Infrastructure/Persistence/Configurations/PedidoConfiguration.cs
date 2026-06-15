@@ -25,6 +25,11 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
         builder.Property(p => p.ChaveAcessoNfe).HasMaxLength(44).HasColumnName("chave_acesso_nfe");
         builder.Property(p => p.CaminhoPdfDanfe).HasMaxLength(500).HasColumnName("caminho_pdf_danfe");
 
+        // NFS-e
+        builder.Property(p => p.NumeroNfse).HasColumnName("numero_nfse");
+        builder.Property(p => p.CodigoVerificacaoNfse).HasMaxLength(50).HasColumnName("codigo_verificacao_nfse");
+        builder.Property(p => p.LinkNfseNacional).HasMaxLength(500).HasColumnName("link_nfse_nacional");
+
         builder.HasIndex(p => new { p.TenantId, p.NumeroPedido })
             .IsUnique().HasDatabaseName("ix_pedidos_tenant_numero");
         builder.HasIndex(p => new { p.TenantId, p.Status })

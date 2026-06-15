@@ -30,6 +30,7 @@ import {
   ChevronLeft as ChevronLeftIcon,
 } from '@mui/icons-material';
 import { useAuthStore } from '../stores/authStore';
+import { useEmpresa } from '../hooks/useEmpresa';
 
 const DRAWER_WIDTH = 260;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -39,8 +40,8 @@ const menuItems = [
   { text: 'Produtos', icon: <InventoryIcon />, path: '/produtos' },
   { text: 'Pessoas', icon: <PeopleIcon />, path: '/pessoas' },
   { text: 'Pedidos', icon: <ShoppingCartIcon />, path: '/pedidos' },
-  { text: 'Fiscal', icon: <ReceiptIcon />, path: '/fiscal', disabled: true },
-  { text: 'Configurações', icon: <SettingsIcon />, path: '/configuracoes', disabled: true },
+  { text: 'Fiscal', icon: <ReceiptIcon />, path: '/fiscal' },
+  { text: 'Configurações', icon: <SettingsIcon />, path: '/empresa' },
 ];
 
 export default function Layout() {
@@ -49,6 +50,7 @@ export default function Layout() {
   const location = useLocation();
   const theme = useTheme();
   const { nomeCompleto, email, tenantTier, logout } = useAuthStore();
+  const { data: empresa } = useEmpresa();
 
   const handleLogout = () => {
     logout();
@@ -110,8 +112,8 @@ export default function Layout() {
                 placement="right"
               >
                 <ListItemButton
-                  onClick={() => !item.disabled && navigate(item.path)}
-                  disabled={item.disabled}
+          onClick={() => !item.disabled && navigate(item.path)}
+                  disabled={!!item.disabled}
                   sx={{
                     borderRadius: 2,
                     mb: 0.5,
@@ -227,6 +229,25 @@ export default function Layout() {
         <AppBar position="sticky" elevation={0}>
           <Toolbar>
             <Box sx={{ flex: 1 }} />
+            {empresa && empresa.ambienteFiscal === 2 && (
+              <Chip
+                label="⚠️ HOMOLOGAÇÃO"
+                size="small"
+                sx={{
+                  mr: 1.5,
+                  fontWeight: 700,
+                  letterSpacing: '0.03em',
+                  bgcolor: (t) => alpha(t.palette.warning.main, 0.12),
+                  color: 'warning.main',
+                  border: (t) => `1px solid ${alpha(t.palette.warning.main, 0.3)}`,
+                  animation: 'pulse 2s ease-in-out infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': { opacity: 1 },
+                    '50%': { opacity: 0.7 },
+                  },
+                }}
+              />
+            )}
             <Chip
               label={tenantTier === 'Enterprise' ? 'Enterprise' : 'SaaS'}
               size="small"

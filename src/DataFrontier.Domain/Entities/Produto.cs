@@ -36,4 +36,20 @@ public class Produto : BaseEntity
     /// Indica se o produto está ativo para comercialização.
     /// </summary>
     public bool Ativo { get; set; } = true;
+
+    // ── Campos para Serviço (NFS-e Nacional) ─────────────────────
+    /// <summary>Indica se o produto é um serviço (para NFS-e).</summary>
+    public bool IsServico { get; set; } = false;
+
+    /// <summary>Código da Lista de Serviços (LC 116/2003). Ex: "01.01"</summary>
+    public string? CodigoServico { get; set; }
+
+    /// <summary>Código CNAE da atividade. Ex: "6201501"</summary>
+    public string? CodigoCnae { get; set; }
+
+    /// <summary>NBS - Nomenclatura Brasileira de Serviços. Ex: "1.0101.0100"</summary>
+    public string? CodigoNbs { get; set; }
+
+    /// <summary>Unidade de medida (UN, HR, MES, etc.)</summary>
+    public string UnidadeMedida { get; set; } = "UN";
 }

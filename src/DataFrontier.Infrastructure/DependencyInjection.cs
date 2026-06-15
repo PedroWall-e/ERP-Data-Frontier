@@ -40,10 +40,18 @@ public static class DependencyInjection
         services.AddScoped<IProdutoService, ProdutoService>();
         services.AddScoped<IPessoaService, PessoaService>();
         services.AddScoped<IPedidoService, PedidoService>();
+        services.AddScoped<IEmpresaService, EmpresaService>();
 
         // ── Fiscal (ACBrLib.NFe) ──────────────────────────────────────
         services.Configure<ACBrNFeConfig>(configuration.GetSection("ACBrNFe"));
         services.AddScoped<IFiscalService, ACBrFiscalService>();
+
+        // ── Fiscal (ACBrLib.NFSe) ──────────────────────────────────────
+        services.Configure<ACBrNFSeConfig>(configuration.GetSection("ACBrNFSe"));
+        services.AddScoped<INFSeService, ACBrNFSeService>();
+
+        // ── XML Storage ──────────────────────────────────────────────────
+        services.AddScoped<IXmlStorageService, XmlStorageService>();
 
         // ── Interceptors ─────────────────────────────────────────────
         services.AddScoped<TenantInterceptor>();

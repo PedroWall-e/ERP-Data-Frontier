@@ -26,6 +26,12 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  Switch,
+  FormControlLabel,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -37,12 +43,19 @@ import {
 import { useProdutos, useCreateProduto, useUpdateProduto, useDeleteProduto } from '../hooks/useProdutos';
 import type { ProdutoRequest, Produto } from '../api/produtos';
 
+const UNIDADES = ['UN', 'HR', 'MES', 'DIA', 'KG', 'M', 'M2', 'M3', 'LT', 'PCT'];
+
 const EMPTY_FORM: ProdutoRequest = {
   nome: '',
   descricao: '',
   codigo: '',
   codigoNcm: '',
   precoUnitario: 0,
+  isServico: false,
+  codigoServico: '',
+  codigoCnae: '',
+  codigoNbs: '',
+  unidadeMedida: 'UN',
 };
 
 export default function ProdutosPage() {
@@ -87,6 +100,11 @@ export default function ProdutosPage() {
       codigo: produto.codigo,
       codigoNcm: produto.codigoNcm || '',
       precoUnitario: produto.precoUnitario,
+      isServico: produto.isServico,
+      codigoServico: produto.codigoServico || '',
+      codigoCnae: produto.codigoCnae || '',
+      codigoNbs: produto.codigoNbs || '',
+      unidadeMedida: produto.unidadeMedida || 'UN',
     });
     setEditingId(produto.id);
     setDialogOpen(true);
@@ -185,7 +203,9 @@ export default function ProdutosPage() {
               <TableRow>
                 <TableCell>Código</TableCell>
                 <TableCell>Nome</TableCell>
-                <TableCell>NCM</TableCell>
+                <TableCell align="center">Tipo</TableCell>
+                <TableCell>NCM / Cód. Serviço</TableCell>
+                <TableCell align="center">Unidade</TableCell>
                 <TableCell align="right">Preço</TableCell>
                 <TableCell align="center">Status</TableCell>
                 <TableCell align="center">Ações</TableCell>
@@ -195,7 +215,7 @@ export default function ProdutosPage() {
               {isLoading
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      {[1, 2, 3, 4, 5, 6].map((j) => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((j) => (
                         <TableCell key={j}>
                           <Skeleton variant="text" />
                         </TableCell>
@@ -225,10 +245,32 @@ export default function ProdutosPage() {
                           </Typography>
                         )}
                       </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={produto.isServico ? '🔧 Serviço' : '📦 Produto'}
+                          size="small"
+                          sx={{
+                            bgcolor: produto.isServico ? alpha('#00D9A6', 0.12) : alpha('#42A5F5', 0.12),
+                            color: produto.isServico ? '#00D9A6' : '#42A5F5',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                          }}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontFamily: 'monospace' }} color="text.secondary">
-                          {produto.codigoNcm || '—'}
+                          {produto.isServico
+                            ? produto.codigoServico || '—'
+                            : produto.codigoNcm || '—'}
                         </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={produto.unidadeMedida || 'UN'}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.7rem' }}
+                        />
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -302,12 +344,65 @@ export default function ProdutosPage() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ pt: 1 }}>
+            {/* Toggle: É Serviço? */}
+            <Grid size={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.isServico}
+                    onChange={(e) => setForm((prev) => ({ ...prev, isServico: e.target.checked }))}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': { color: '#00D9A6' },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#00D9A6' },
+                    }}
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {form.isServico ? '🔧 É Serviço' : '📦 É Produto'}
+                    </Typography>
+                    <Chip
+                      label={form.isServico ? 'Serviço' : 'Produto'}
+                      size="small"
+                      sx={{
+                        bgcolor: form.isServico ? alpha('#00D9A6', 0.12) : alpha('#42A5F5', 0.12),
+                        color: form.isServico ? '#00D9A6' : '#42A5F5',
+                        fontWeight: 600,
+                        fontSize: '0.7rem',
+                      }}
+                    />
+                  </Box>
+                }
+              />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField fullWidth label="Código (SKU)" value={form.codigo} onChange={handleChange('codigo')} required />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth label="NCM" value={form.codigoNcm} onChange={handleChange('codigoNcm')} slotProps={{ htmlInput: { maxLength: 8 } }} />
-            </Grid>
+
+            {/* NCM - only for products */}
+            {!form.isServico && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField fullWidth label="NCM" value={form.codigoNcm} onChange={handleChange('codigoNcm')} slotProps={{ htmlInput: { maxLength: 8 } }} />
+              </Grid>
+            )}
+
+            {/* Service fields - only for services */}
+            {form.isServico && (
+              <>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Código Serviço (LC 116)" value={form.codigoServico} onChange={handleChange('codigoServico')} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Código CNAE" value={form.codigoCnae} onChange={handleChange('codigoCnae')} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Código NBS" value={form.codigoNbs} onChange={handleChange('codigoNbs')} />
+                </Grid>
+              </>
+            )}
+
             <Grid size={12}>
               <TextField fullWidth label="Nome" value={form.nome} onChange={handleChange('nome')} required />
             </Grid>
@@ -324,6 +419,20 @@ export default function ProdutosPage() {
                 required
                 slotProps={{ htmlInput: { step: '0.01', min: '0.01' } }}
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth>
+                <InputLabel>Unidade de Medida</InputLabel>
+                <Select
+                  value={form.unidadeMedida}
+                  label="Unidade de Medida"
+                  onChange={(e) => setForm((prev) => ({ ...prev, unidadeMedida: e.target.value }))}
+                >
+                  {UNIDADES.map((u) => (
+                    <MenuItem key={u} value={u}>{u}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
         </DialogContent>

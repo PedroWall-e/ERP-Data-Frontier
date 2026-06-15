@@ -36,6 +36,11 @@ public class ProdutoService : IProdutoService
             Codigo = request.Codigo,
             CodigoNcm = request.CodigoNcm,
             PrecoUnitario = request.PrecoUnitario,
+            IsServico = request.IsServico,
+            CodigoServico = request.CodigoServico,
+            CodigoCnae = request.CodigoCnae,
+            CodigoNbs = request.CodigoNbs,
+            UnidadeMedida = request.UnidadeMedida,
             Ativo = true
         };
 
@@ -109,6 +114,11 @@ public class ProdutoService : IProdutoService
         produto.Codigo = request.Codigo;
         produto.CodigoNcm = request.CodigoNcm;
         produto.PrecoUnitario = request.PrecoUnitario;
+        produto.IsServico = request.IsServico;
+        produto.CodigoServico = request.CodigoServico;
+        produto.CodigoCnae = request.CodigoCnae;
+        produto.CodigoNbs = request.CodigoNbs;
+        produto.UnidadeMedida = request.UnidadeMedida;
 
         await _context.SaveChangesAsync();
 
@@ -142,6 +152,11 @@ public class ProdutoService : IProdutoService
             CodigoNcm = produto.CodigoNcm,
             PrecoUnitario = produto.PrecoUnitario,
             Ativo = produto.Ativo,
+            IsServico = produto.IsServico,
+            CodigoServico = produto.CodigoServico,
+            CodigoCnae = produto.CodigoCnae,
+            CodigoNbs = produto.CodigoNbs,
+            UnidadeMedida = produto.UnidadeMedida,
             CriadoEm = produto.CriadoEm,
             AtualizadoEm = produto.AtualizadoEm
         };

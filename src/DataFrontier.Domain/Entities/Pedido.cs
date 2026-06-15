@@ -19,6 +19,11 @@ public class Pedido : BaseEntity
     public string? ChaveAcessoNfe { get; set; }
     public string? CaminhoPdfDanfe { get; set; }
 
+    // ── NFS-e (preenchidos após faturamento de serviço) ──────────
+    public long? NumeroNfse { get; set; }
+    public string? CodigoVerificacaoNfse { get; set; }
+    public string? LinkNfseNacional { get; set; }
+
     // Navigation
     public Pessoa Pessoa { get; set; } = null!;
     public ICollection<PedidoItem> Itens { get; set; } = new List<PedidoItem>();

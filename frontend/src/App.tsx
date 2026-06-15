@@ -16,6 +16,8 @@ import ProdutosPage from './pages/ProdutosPage';
 import PessoasPage from './pages/PessoasPage';
 import PedidosPage from './pages/PedidosPage';
 import NovoPedidoPage from './pages/NovoPedidoPage';
+import EmpresaPage from './pages/EmpresaPage';
+import ZonaTestesFiscalPage from './pages/ZonaTestesFiscalPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +50,8 @@ export default function App() {
               <Route path="/pessoas" element={<PessoasPage />} />
               <Route path="/pedidos" element={<PedidosPage />} />
               <Route path="/pedidos/novo" element={<NovoPedidoPage />} />
+              <Route path="/empresa" element={<EmpresaPage />} />
+              <Route path="/fiscal" element={<ZonaTestesFiscalPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

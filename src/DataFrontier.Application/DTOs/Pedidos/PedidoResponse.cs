@@ -17,6 +17,9 @@ public class PedidoResponse
     public int? NumeroNfe { get; set; }
     public string? ChaveAcessoNfe { get; set; }
     public string? CaminhoPdfDanfe { get; set; }
+    public long? NumeroNfse { get; set; }
+    public string? CodigoVerificacaoNfse { get; set; }
+    public string? LinkNfseNacional { get; set; }
     public List<PedidoItemResponse> Itens { get; set; } = new();
     public DateTime CriadoEm { get; set; }
 }

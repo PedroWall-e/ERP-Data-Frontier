@@ -232,6 +232,245 @@ public sealed class ACBrFiscalService : IFiscalService
     }
 
     // ─────────────────────────────────────────────────────────────
+    // Cancelamento NF-e
+    // ─────────────────────────────────────────────────────────────
+    public async Task<FiscalResponseDTO> CancelarNFeAsync(Guid pedidoId, string justificativa)
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            var pedido = await _context.Pedidos
+                .FirstOrDefaultAsync(p => p.Id == pedidoId)
+                ?? throw new KeyNotFoundException($"Pedido '{pedidoId}' não encontrado.");
+
+            if (pedido.Status != StatusPedido.Faturado || string.IsNullOrEmpty(pedido.ChaveAcessoNfe))
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = "Pedido não está faturado ou não possui NF-e." };
+
+            if (justificativa.Length < 15)
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = "Justificativa deve ter no mínimo 15 caracteres." };
+
+            // Carrega empresa para verificar ambiente
+            var empresa = await _context.ConfiguracoesEmpresa.FirstOrDefaultAsync();
+
+            if (empresa?.AmbienteFiscal == 2) // Homologação — simula
+            {
+                _logger.LogWarning("HOMOLOGAÇÃO: Cancelamento NF-e simulado para Pedido {PedidoId}", pedidoId);
+
+                pedido.Status = StatusPedido.Cancelado;
+
+                // Registra documento fiscal
+                var doc = await _context.DocumentosFiscais
+                    .FirstOrDefaultAsync(d => d.PedidoId == pedidoId && d.Tipo == Domain.Enums.TipoDocumentoFiscal.NFe);
+                if (doc != null)
+                {
+                    doc.Status = Domain.Enums.StatusDocumentoFiscal.Cancelado;
+                    doc.ProtocoloCancelamento = $"SIM-CANC-{DateTime.UtcNow:yyyyMMddHHmmss}";
+                    doc.JustificativaCancelamento = justificativa;
+                    doc.DataCancelamento = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    ChaveAcesso = pedido.ChaveAcessoNfe,
+                    Protocolo = $"SIM-CANC-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                    Mensagem = "[HOMOLOGAÇÃO] NF-e cancelada com sucesso (simulação)."
+                };
+            }
+
+            // Produção — ACBrLib
+            try
+            {
+                var nfe = GetOrCreateNFe();
+                var resultado = nfe.Cancelar(pedido.ChaveAcessoNfe, justificativa, string.Empty, 1);
+
+                _logger.LogInformation("Cancelamento NF-e: Retorno={Retorno}", resultado);
+
+                pedido.Status = StatusPedido.Cancelado;
+                await _context.SaveChangesAsync();
+
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    ChaveAcesso = pedido.ChaveAcessoNfe,
+                    Mensagem = "NF-e cancelada com sucesso."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = $"Erro ao cancelar: {ex.Message}" };
+            }
+        }
+        finally { _semaphore.Release(); }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Carta de Correção (CC-e)
+    // ─────────────────────────────────────────────────────────────
+    public async Task<FiscalResponseDTO> CartaCorrecaoAsync(Guid pedidoId, string textoCorrecao)
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            var pedido = await _context.Pedidos
+                .FirstOrDefaultAsync(p => p.Id == pedidoId)
+                ?? throw new KeyNotFoundException($"Pedido '{pedidoId}' não encontrado.");
+
+            if (string.IsNullOrEmpty(pedido.ChaveAcessoNfe))
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = "Pedido não possui NF-e emitida." };
+
+            // Busca ou cria o DocumentoFiscal para incrementar sequência
+            var doc = await _context.DocumentosFiscais
+                .FirstOrDefaultAsync(d => d.PedidoId == pedidoId && d.Tipo == Domain.Enums.TipoDocumentoFiscal.NFe);
+
+            var sequencia = (doc?.SequenciaCartaCorrecao ?? 0) + 1;
+
+            var empresa = await _context.ConfiguracoesEmpresa.FirstOrDefaultAsync();
+
+            if (empresa?.AmbienteFiscal == 2) // Homologação
+            {
+                if (doc != null)
+                {
+                    doc.TextoCartaCorrecao = textoCorrecao;
+                    doc.SequenciaCartaCorrecao = sequencia;
+                }
+                await _context.SaveChangesAsync();
+
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    ChaveAcesso = pedido.ChaveAcessoNfe,
+                    Protocolo = $"SIM-CCE-{sequencia}-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                    Mensagem = $"[HOMOLOGAÇÃO] CC-e #{sequencia} registrada (simulação)."
+                };
+            }
+
+            // Produção — ACBrLib
+            try
+            {
+                var nfe = GetOrCreateNFe();
+                nfe.LimparLista();
+                nfe.CarregarINI($"[infEvento]\nchNFe={pedido.ChaveAcessoNfe}\ntpEvento=110110\nnSeqEvento={sequencia}\nxCorrecao={textoCorrecao}");
+                var resultado = nfe.EnviarEvento(1);
+
+                if (doc != null)
+                {
+                    doc.TextoCartaCorrecao = textoCorrecao;
+                    doc.SequenciaCartaCorrecao = sequencia;
+                }
+                await _context.SaveChangesAsync();
+
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    ChaveAcesso = pedido.ChaveAcessoNfe,
+                    Mensagem = $"CC-e #{sequencia} enviada com sucesso."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = $"Erro na CC-e: {ex.Message}" };
+            }
+        }
+        finally { _semaphore.Release(); }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Inutilização de Numeração
+    // ─────────────────────────────────────────────────────────────
+    public async Task<FiscalResponseDTO> InutilizarNumeracaoAsync(int serie, int nInicio, int nFim, string justificativa)
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            var empresa = await _context.ConfiguracoesEmpresa.FirstOrDefaultAsync()
+                ?? throw new InvalidOperationException("Configuração da empresa não encontrada.");
+
+            var cnpj = empresa.Cnpj.Replace(".", "").Replace("/", "").Replace("-", "");
+
+            if (empresa.AmbienteFiscal == 2) // Homologação
+            {
+                _logger.LogWarning("HOMOLOGAÇÃO: Inutilização simulada ({Serie}, {Ini}-{Fim})", serie, nInicio, nFim);
+
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    Protocolo = $"SIM-INUT-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                    Mensagem = $"[HOMOLOGAÇÃO] Numeração {nInicio}-{nFim} (Série {serie}) inutilizada (simulação)."
+                };
+            }
+
+            try
+            {
+                var nfe = GetOrCreateNFe();
+                var resultado = nfe.Inutilizar(cnpj, justificativa, DateTime.Now.Year, 55, serie, nInicio, nFim);
+
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    Mensagem = $"Numeração {nInicio}-{nFim} inutilizada com sucesso."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = $"Erro ao inutilizar: {ex.Message}" };
+            }
+        }
+        finally { _semaphore.Release(); }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Consulta NF-e na SEFAZ
+    // ─────────────────────────────────────────────────────────────
+    public async Task<FiscalResponseDTO> ConsultarNFeAsync(Guid pedidoId)
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
+            var pedido = await _context.Pedidos
+                .FirstOrDefaultAsync(p => p.Id == pedidoId)
+                ?? throw new KeyNotFoundException($"Pedido '{pedidoId}' não encontrado.");
+
+            if (string.IsNullOrEmpty(pedido.ChaveAcessoNfe))
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = "Pedido não possui NF-e emitida." };
+
+            var empresa = await _context.ConfiguracoesEmpresa.FirstOrDefaultAsync();
+
+            if (empresa?.AmbienteFiscal == 2) // Homologação
+            {
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    ChaveAcesso = pedido.ChaveAcessoNfe,
+                    NumeroNfe = pedido.NumeroNfe,
+                    Mensagem = "[HOMOLOGAÇÃO] Consulta simulada — NF-e autorizada.",
+                    CodigoRetorno = 100
+                };
+            }
+
+            try
+            {
+                var nfe = GetOrCreateNFe();
+                var resultado = nfe.Consultar(pedido.ChaveAcessoNfe);
+
+                return new FiscalResponseDTO
+                {
+                    Sucesso = true,
+                    ChaveAcesso = pedido.ChaveAcessoNfe,
+                    NumeroNfe = pedido.NumeroNfe,
+                    Mensagem = "Consulta realizada."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new FiscalResponseDTO { Sucesso = false, Mensagem = $"Erro na consulta: {ex.Message}" };
+            }
+        }
+        finally { _semaphore.Release(); }
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // IDisposable — libera recursos nativos do ACBrLib
     // ─────────────────────────────────────────────────────────────
 

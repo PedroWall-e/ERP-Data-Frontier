@@ -53,9 +53,6 @@ public class AppDbContext : DbContext
     /// <summary>Produtos e serviços cadastrados.</summary>
     public DbSet<Produto> Produtos => Set<Produto>();
 
-    /// <summary>Impostos calculados por item de documento fiscal.</summary>
-    public DbSet<ImpostoDoItem> ImpostosDoItem => Set<ImpostoDoItem>();
-
     /// <summary>Pessoas (Clientes e/ou Fornecedores).</summary>
     public DbSet<Pessoa> Pessoas => Set<Pessoa>();
 
@@ -70,6 +67,12 @@ public class AppDbContext : DbContext
 
     /// <summary>Impostos por item de pedido (Reforma Tributária ready).</summary>
     public DbSet<PedidoItemImposto> PedidoItemImpostos => Set<PedidoItemImposto>();
+
+    /// <summary>Configurações da empresa emitente (1 por tenant).</summary>
+    public DbSet<ConfiguracaoEmpresa> ConfiguracoesEmpresa => Set<ConfiguracaoEmpresa>();
+
+    /// <summary>Documentos fiscais emitidos (NF-e, NFS-e).</summary>
+    public DbSet<DocumentoFiscal> DocumentosFiscais => Set<DocumentoFiscal>();
 
     // ── Model Configuration ──────────────────────────────────────────
 

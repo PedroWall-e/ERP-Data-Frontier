@@ -8,6 +8,11 @@ export interface Produto {
   codigoNcm?: string;
   precoUnitario: number;
   ativo: boolean;
+  isServico: boolean;
+  codigoServico?: string;
+  codigoCnae?: string;
+  codigoNbs?: string;
+  unidadeMedida: string;
   criadoEm: string;
   atualizadoEm?: string;
 }
@@ -18,6 +23,11 @@ export interface ProdutoRequest {
   codigo: string;
   codigoNcm?: string;
   precoUnitario: number;
+  isServico: boolean;
+  codigoServico?: string;
+  codigoCnae?: string;
+  codigoNbs?: string;
+  unidadeMedida: string;
 }
 
 export interface PagedResult<T> {

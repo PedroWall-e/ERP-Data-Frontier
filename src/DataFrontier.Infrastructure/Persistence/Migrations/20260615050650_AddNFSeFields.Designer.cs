@@ -3,6 +3,7 @@ using System;
 using DataFrontier.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataFrontier.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260615050650_AddNFSeFields")]
+    partial class AddNFSeFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -187,114 +190,6 @@ namespace DataFrontier.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_configuracoes_empresa_tenant");
 
                     b.ToTable("configuracoes_empresa", (string)null);
-                });
-
-            modelBuilder.Entity("DataFrontier.Domain.Entities.DocumentoFiscal", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime?>("AtualizadoEm")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("atualizado_em");
-
-                    b.Property<string>("CaminhoPdf")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("caminho_pdf");
-
-                    b.Property<string>("CaminhoXml")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("caminho_xml");
-
-                    b.Property<string>("ChaveAcesso")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("chave_acesso");
-
-                    b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("criado_em");
-
-                    b.Property<DateTime>("DataAutorizacao")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("data_autorizacao");
-
-                    b.Property<DateTime?>("DataCancelamento")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("data_cancelamento");
-
-                    b.Property<string>("JustificativaCancelamento")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("justificativa_cancelamento");
-
-                    b.Property<int>("Numero")
-                        .HasColumnType("integer")
-                        .HasColumnName("numero");
-
-                    b.Property<Guid>("PedidoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("pedido_id");
-
-                    b.Property<string>("Protocolo")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("protocolo");
-
-                    b.Property<string>("ProtocoloCancelamento")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("protocolo_cancelamento");
-
-                    b.Property<int>("SequenciaCartaCorrecao")
-                        .HasColumnType("integer")
-                        .HasColumnName("sequencia_carta_correcao");
-
-                    b.Property<int>("Serie")
-                        .HasColumnType("integer")
-                        .HasColumnName("serie");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)")
-                        .HasColumnName("status");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tenant_id");
-
-                    b.Property<string>("TextoCartaCorrecao")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("texto_carta_correcao");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
-                        .HasColumnName("tipo");
-
-                    b.Property<string>("XmlAutorizacao")
-                        .HasColumnType("text")
-                        .HasColumnName("xml_autorizacao");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PedidoId");
-
-                    b.HasIndex("TenantId", "ChaveAcesso")
-                        .HasDatabaseName("ix_documentos_fiscais_tenant_chave");
-
-                    b.HasIndex("TenantId", "Tipo", "Numero")
-                        .HasDatabaseName("ix_documentos_fiscais_tenant_tipo_numero");
-
-                    b.ToTable("documentos_fiscais", (string)null);
                 });
 
             modelBuilder.Entity("DataFrontier.Domain.Entities.Endereco", b =>
@@ -888,17 +783,6 @@ namespace DataFrontier.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_usuarios_tenant");
 
                     b.ToTable("usuarios", (string)null);
-                });
-
-            modelBuilder.Entity("DataFrontier.Domain.Entities.DocumentoFiscal", b =>
-                {
-                    b.HasOne("DataFrontier.Domain.Entities.Pedido", "Pedido")
-                        .WithMany()
-                        .HasForeignKey("PedidoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Pedido");
                 });
 
             modelBuilder.Entity("DataFrontier.Domain.Entities.Endereco", b =>

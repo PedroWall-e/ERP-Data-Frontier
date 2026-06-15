@@ -42,3 +42,80 @@ export function useUpdatePedidoStatus() {
     },
   });
 }
+
+export function useFaturarPedido() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => pedidosApi.faturar(id).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+    },
+  });
+}
+
+export function useDownloadDanfe() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await pedidosApi.downloadDanfe(id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `DANFE-${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    },
+  });
+}
+
+export function useFaturarServico() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => pedidosApi.faturarServico(id).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+    },
+  });
+}
+
+export function useCancelarNfe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, justificativa }: { id: string; justificativa: string }) =>
+      pedidosApi.cancelarNfe(id, justificativa).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pedidos'] }),
+  });
+}
+
+export function useCartaCorrecao() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, texto }: { id: string; texto: string }) =>
+      pedidosApi.cartaCorrecao(id, texto).then(res => res.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pedidos'] }),
+  });
+}
+
+export function useConsultarSefaz() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      pedidosApi.consultarSefaz(id).then(res => res.data),
+  });
+}
+
+export function useDownloadXml() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await pedidosApi.downloadXml(id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `NF-e-${id}.xml`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    },
+  });
+}

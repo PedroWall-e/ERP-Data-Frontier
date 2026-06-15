@@ -39,4 +39,19 @@ public class ProdutoRequest
     /// </summary>
     [Range(0.01, 99999999.99, ErrorMessage = "Preço deve ser maior que zero.")]
     public decimal PrecoUnitario { get; set; }
+
+    // ── Serviço ──────────────────────────────────────────────────
+    public bool IsServico { get; set; } = false;
+
+    [MaxLength(10)]
+    public string? CodigoServico { get; set; }
+
+    [MaxLength(10)]
+    public string? CodigoCnae { get; set; }
+
+    [MaxLength(15)]
+    public string? CodigoNbs { get; set; }
+
+    [MaxLength(5)]
+    public string UnidadeMedida { get; set; } = "UN";
 }

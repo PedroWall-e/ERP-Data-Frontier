@@ -56,6 +56,13 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         builder.Property(p => p.AtualizadoEm)
             .HasColumnName("atualizado_em");
 
+        // Campos de Serviço (NFS-e)
+        builder.Property(p => p.IsServico).HasColumnName("is_servico").HasDefaultValue(false);
+        builder.Property(p => p.CodigoServico).HasMaxLength(10).HasColumnName("codigo_servico");
+        builder.Property(p => p.CodigoCnae).HasMaxLength(10).HasColumnName("codigo_cnae");
+        builder.Property(p => p.CodigoNbs).HasMaxLength(15).HasColumnName("codigo_nbs");
+        builder.Property(p => p.UnidadeMedida).HasMaxLength(5).HasColumnName("unidade_medida").HasDefaultValue("UN");
+
         // Índice composto para busca por tenant + código (unicidade por tenant)
         builder.HasIndex(p => new { p.TenantId, p.Codigo })
             .IsUnique()

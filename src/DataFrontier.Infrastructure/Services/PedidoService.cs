@@ -172,6 +172,9 @@ public class PedidoService : IPedidoService
         NumeroNfe = p.NumeroNfe,
         ChaveAcessoNfe = p.ChaveAcessoNfe,
         CaminhoPdfDanfe = p.CaminhoPdfDanfe,
+        NumeroNfse = p.NumeroNfse,
+        CodigoVerificacaoNfse = p.CodigoVerificacaoNfse,
+        LinkNfseNacional = p.LinkNfseNacional,
         CriadoEm = p.CriadoEm,
         Itens = p.Itens?.Select(i => new PedidoItemResponse
         {

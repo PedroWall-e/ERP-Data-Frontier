@@ -57,6 +57,14 @@ export interface Pedido {
   observacoes?: string;
   itens: PedidoItemResponse[];
   criadoEm: string;
+  // NF-e
+  numeroNfe?: number;
+  chaveAcessoNfe?: string;
+  caminhoPdfDanfe?: string;
+  // NFS-e
+  numeroNfse?: number;
+  codigoVerificacaoNfse?: string;
+  linkNfseNacional?: string;
 }
 
 export const pedidosApi = {
@@ -71,4 +79,25 @@ export const pedidosApi = {
 
   updateStatus: (id: string, status: string) =>
     apiClient.patch<Pedido>(`/pedidos/${id}/status`, { status }),
+
+  faturar: (id: string) =>
+    apiClient.post(`/pedidos/${id}/faturar`),
+
+  downloadDanfe: (id: string) =>
+    apiClient.get(`/pedidos/${id}/danfe`, { responseType: 'blob' }),
+
+  faturarServico: (id: string) =>
+    apiClient.post(`/pedidos/${id}/faturar-servico`),
+
+  cancelarNfe: (id: string, justificativa: string) =>
+    apiClient.post(`/pedidos/${id}/cancelar-nfe`, { justificativa }),
+
+  cartaCorrecao: (id: string, texto: string) =>
+    apiClient.post(`/pedidos/${id}/carta-correcao`, { texto }),
+
+  consultarSefaz: (id: string) =>
+    apiClient.get(`/pedidos/${id}/consultar-sefaz`),
+
+  downloadXml: (id: string) =>
+    apiClient.get(`/pedidos/${id}/xml`, { responseType: 'blob' }),
 };
